@@ -60,6 +60,8 @@ function iniciarUI() {
   /* ---- respaldo ---- */
   $("#btn-exportar").addEventListener("click", (e) => { e.preventDefault(); exportarRespaldo(); });
   $("#btn-importar").addEventListener("click", (e) => { e.preventDefault(); $("#entrada-respaldo").click(); });
+  const salir = $("#btn-salir");
+  if (salir) salir.addEventListener("click", (e) => { e.preventDefault(); cerrarSesion(); });
   $("#entrada-respaldo").addEventListener("change", (e) => {
     if (e.target.files.length) importarRespaldo(e.target.files[0]);
   });
