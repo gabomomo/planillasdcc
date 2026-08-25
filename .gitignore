@@ -1,0 +1,16 @@
+# ==========================================================
+#  NUNCA subir archivos con datos de planilla a este repo.
+#  El sitio es publico: nombres, cedulas, cuentas y salarios
+#  quedarian expuestos en internet.
+# ==========================================================
+*.xlsx
+*.xlsm
+*.xls
+*.csv
+~$*
+Respaldo*.json
+
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
