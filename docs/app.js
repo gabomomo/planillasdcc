@@ -14,6 +14,11 @@ const PYODIDE_URL = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
 const RAIZ = "/trabajo";
 const DIR_PLANTILLAS = RAIZ + "/Plantillas";
 const DIR_GENERADAS = RAIZ + "/Planillas generadas";
+// Las planillas que se suben solo para unificar viven aparte: si cayeran en
+// "Planillas generadas", el programa las tomaria como el periodo anterior y
+// le descuadraria el ciclo y la ventana de renta a la proxima corrida.
+const DIR_SUBIDAS = RAIZ + "/subidas";
+let nSubidas = 0;
 
 let py = null;
 let P = null;                 // el módulo planilla.py
@@ -284,10 +289,10 @@ json.dumps({"ok": True, "planilla": os.path.basename(_sal),
 `);
 }
 
-function unificarPy(nombres, etiqueta) {
+function unificarPy(rutas, etiqueta) {
   return jsonPy(`
 import planilla as P, os
-_rutas = [os.path.join(${JSON.stringify(DIR_GENERADAS)}, n) for n in ${JSON.stringify(nombres)}]
+_rutas = ${JSON.stringify(rutas)}
 _sal, _filas, _per, _av = P.unificar(_rutas, ${JSON.stringify(RAIZ)},
                                      ${JSON.stringify(etiqueta || "")} or None,
                                      log=lambda *a: None)
@@ -309,11 +314,34 @@ for _x in _filas:
 json.dumps({"ok": True, "archivo": os.path.basename(_sal), "personas": len(_filas),
   "estados": _est, "bruto": round(sum(x["bruto"] for x in _filas), 2),
   "dias": round(sum(x["dias"] for x in _filas), 2),
-  "periodos": [{"archivo": p["archivo"], "pago": p["pago"].strftime("%d/%m/%Y")} for p in _per],
+  "periodos": [{"archivo": p["archivo"], "pago": p["pago"].strftime("%d/%m/%Y"),
+                "origen": p.get("origen", "")} for p in _per],
   "secciones": _sec,
   "muestra": [[x["carne"], x["dias"], x["puesto"], x["nombre"], x["cedula"], x["bruto"],
                x["estado"], x["f_ic"].strftime("%d/%m/%Y") if x["f_ic"] else "",
                x["f_ex"].strftime("%d/%m/%Y") if x["f_ex"] else ""] for x in _filas]}, default=str)
+`);
+}
+
+/** Guarda en el disco virtual una planilla traida de otro lado. */
+async function guardarPlanillaSubida(f) {
+  const carpeta = DIR_SUBIDAS + "/s" + (++nSubidas);
+  asegurarDir(carpeta);
+  const ruta = carpeta + "/" + f.name.replace(/[^\w \-.()]/g, "_");
+  py.FS.writeFile(ruta, new Uint8Array(await f.arrayBuffer()));
+  return ruta;
+}
+
+/** Quita del disco virtual una planilla subida que ya no se quiere. */
+function olvidarPlanillaSubida(ruta) {
+  try { py.FS.unlink(ruta); } catch (e) { /* ya no estaba */ }
+}
+
+/** Ficha de una planilla cualquiera, para mostrarla en la lista. */
+function fichaPlanillaPy(ruta) {
+  return jsonPy(`
+import planilla as P
+json.dumps(P.resumen_planilla_ccss(${JSON.stringify(ruta)}), default=str)
 `);
 }
 

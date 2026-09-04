@@ -57,6 +57,16 @@ function iniciarUI() {
   $("#generar").addEventListener("click", generar);
   $("#unir").addEventListener("click", unificar);
 
+  /* ---- planillas subidas para unificar ---- */
+  const zonaC = $("#zona-ccss"), entradaC = $("#entrada-ccss");
+  zonaC.addEventListener("click", () => entradaC.click());
+  ["dragenter", "dragover"].forEach((e) =>
+    zonaC.addEventListener(e, (ev) => { ev.preventDefault(); zonaC.classList.add("encima"); }));
+  ["dragleave", "drop"].forEach((e) =>
+    zonaC.addEventListener(e, (ev) => { ev.preventDefault(); zonaC.classList.remove("encima"); }));
+  zonaC.addEventListener("drop", (ev) => subirPlanillas(ev.dataTransfer.files));
+  entradaC.addEventListener("change", () => { subirPlanillas(entradaC.files); entradaC.value = ""; });
+
   /* ---- respaldo ---- */
   $("#btn-exportar").addEventListener("click", (e) => { e.preventDefault(); exportarRespaldo(); });
   $("#btn-importar").addEventListener("click", (e) => { e.preventDefault(); $("#entrada-respaldo").click(); });
@@ -219,29 +229,104 @@ function engancharGrupos(sel) {
 }
 
 /* ---------------- unificación CCSS ---------------- */
+let subidasCCSS = [];   // planillas traídas de otro lado, ya revisadas
+const marcadas = {};    // qué filas quedan marcadas, para no perderlas al redibujar
+
+const claveFila = (a) => (a.subido ? "sub:" + a.ruta : "gen:" + a.nombre);
+const rutaDeFila = (a) => (a.subido ? a.ruta : DIR_GENERADAS + "/" + a.nombre);
+const todasLasPlanillas = () => subidasCCSS.concat(generadas);
+
 function cargarGeneradas() {
   const cont = $("#lista-generadas");
   try {
     generadas = listarGeneradasPy();
   } catch (e) {
-    cont.innerHTML = '<div class="alerta mal">No se pudo leer la lista: ' + (e.message || e) + "</div>";
-    return;
+    if (!subidasCCSS.length) {
+      cont.innerHTML = '<div class="alerta mal">No se pudo leer la lista: ' + (e.message || e) + "</div>";
+      return;
+    }
+    generadas = [];
   }
-  if (!generadas.length) {
-    cont.innerHTML = '<div class="alerta ojo">Todavía no hay planillas generadas. Genere primero las del mes en la pestaña «Generar planilla del período».</div>';
-    $("#unir").disabled = true; return;
+  // la primera vez se preseleccionan las del mes más reciente
+  if (generadas.length && !Object.keys(marcadas).length) {
+    const mes = generadas[0].mes;
+    generadas.forEach((a) => { if (a.mes === mes) marcadas[claveFila(a)] = true; });
   }
-  cont.innerHTML = generadas.map((a) =>
-    '<label class="fila-arch"><input type="checkbox" class="ck-gen" value="' + a.nombre + '" data-mes="' + a.mes + '">' +
-    '<span style="flex:1"><span class="nm">Pago del ' + a.pago + "</span>" +
-    '<span class="dt"> &nbsp;·&nbsp; período ' + a.periodo + "</span>" +
-    '<br><span class="dt">' + a.nombre + "</span></span></label>").join("");
-  const mes = generadas[0].mes;
-  $$(".ck-gen").forEach((c) => {
-    c.addEventListener("change", revisarSeleccion);
-    if (c.dataset.mes === mes) c.checked = true;
-  });
+  pintarLista();
+}
+
+function pintarLista() {
+  const cont = $("#lista-generadas");
+  const todas = todasLasPlanillas();
+  if (!todas.length) {
+    cont.innerHTML = '<div class="alerta ojo">Todavía no hay planillas generadas. ' +
+      'Genere primero las del mes en la pestaña «Generar planilla del período», ' +
+      "o suba las que tenga guardadas en otro lado.</div>";
+    revisarSeleccion(); return;
+  }
+  cont.innerHTML = todas.map((a) => {
+    const k = claveFila(a);
+    return '<label class="fila-arch"><input type="checkbox" class="ck-gen" value="' + k + '"' +
+      (marcadas[k] ? " checked" : "") + ">" +
+      '<span style="flex:1"><span class="nm">Pago del ' + a.pago + "</span>" +
+      '<span class="dt"> &nbsp;·&nbsp; período ' + a.periodo + "</span>" +
+      (a.subido ? '<span class="chip ic">subida</span>' : "") +
+      '<br><span class="dt">' + a.nombre +
+      (a.personas ? " &nbsp;·&nbsp; " + a.personas + " personas" : "") +
+      (a.origen ? " &nbsp;·&nbsp; " + a.origen : "") + "</span></span>" +
+      (a.subido ? '<button class="secundario quitar" data-k="' + k + '" style="padding:6px 12px">Quitar</button>' : "") +
+      "</label>";
+  }).join("");
+  $$(".ck-gen").forEach((c) => c.addEventListener("change", () => {
+    marcadas[c.value] = c.checked; revisarSeleccion();
+  }));
+  $$(".quitar").forEach((b) => b.addEventListener("click", (ev) => {
+    ev.preventDefault(); ev.stopPropagation();
+    const k = b.dataset.k;
+    const f = subidasCCSS.find((x) => claveFila(x) === k);
+    if (f) olvidarPlanillaSubida(f.ruta);
+    subidasCCSS = subidasCCSS.filter((x) => claveFila(x) !== k);
+    delete marcadas[k];
+    pintarLista();
+  }));
   revisarSeleccion();
+}
+
+function avisoCCSS(txt, clase) {
+  $("#aviso-ccss").innerHTML = txt
+    ? '<div class="alerta ' + (clase || "mal") + '" style="margin-top:12px">' + txt + "</div>" : "";
+}
+
+async function subirPlanillas(archivos) {
+  const lista = Array.prototype.slice.call(archivos || []);
+  if (!lista.length) return;
+  avisoCCSS("Revisando " + (lista.length === 1 ? "la planilla" : "las planillas") + "…", "ojo");
+  await new Promise((r) => setTimeout(r, 50));
+  const errores = [];
+  for (const f of lista) {
+    if (!/\.xls[xm]$/i.test(f.name)) {
+      errores.push("<strong>" + f.name + "</strong>: no es un archivo de Excel");
+      continue;
+    }
+    let ruta = null;
+    try {
+      ruta = await guardarPlanillaSubida(f);
+      const d = fichaPlanillaPy(ruta);
+      if (todasLasPlanillas().some((a) => a.pago === d.pago)) {
+        errores.push("<strong>" + d.nombre + "</strong>: ya hay una planilla del pago del " + d.pago + " en la lista");
+        olvidarPlanillaSubida(ruta);
+      } else {
+        d.subido = true; d.ruta = ruta;
+        subidasCCSS.unshift(d);
+        marcadas[claveFila(d)] = true;
+      }
+    } catch (e) {
+      if (ruta) olvidarPlanillaSubida(ruta);
+      errores.push("<strong>" + f.name + "</strong>: " + (e.message || e));
+    }
+  }
+  pintarLista();
+  avisoCCSS(errores.length ? "No se pudo agregar:<br>" + errores.join("<br>") : "");
 }
 
 function seleccionadas() {
@@ -252,8 +337,9 @@ function revisarSeleccion() {
   const sel = seleccionadas();
   $("#unir").disabled = sel.length === 0;
   if (sel.length && !$("#etiqueta").value) {
-    const m = generadas.filter((a) => sel.indexOf(a.nombre) >= 0);
-    if (m.length) {
+    const m = todasLasPlanillas().filter((a) => sel.indexOf(claveFila(a)) >= 0);
+    m.sort((a, b) => ((a.mes || "") < (b.mes || "") ? -1 : 1));
+    if (m.length && m[m.length - 1].mes) {
       const MES = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio",
         "Agosto", "Setiembre", "Octubre", "Noviembre", "Diciembre"];
       const p = m[m.length - 1].mes.split("/");
@@ -270,7 +356,10 @@ async function unificar() {
   $("#unir").disabled = true;
   await new Promise((r) => setTimeout(r, 50));
   try {
-    const d = unificarPy(sel, $("#etiqueta").value);
+    const rutas = todasLasPlanillas()
+      .filter((a) => sel.indexOf(claveFila(a)) >= 0)
+      .map(rutaDeFila);
+    const d = unificarPy(rutas, $("#etiqueta").value);
     await persistirGeneradas();
     $("#cargando-ccss").classList.add("oculto");
     $("#unir").disabled = false;

@@ -230,6 +230,9 @@ Al lado de cada planilla, la pantalla le muestra de donde salieron los
 numeros, cuantas personas trae y el periodo que cubre, para que
 confirme antes de unificar.
 
+Esto funciona igual en las dos versiones: la de doble clic y la del
+navegador (https://gabomomo.github.io/planillasdcc/).
+
 Las planillas que usted sube NO se copian a "Planillas generadas":
 se usan solo para ese reporte y se descartan al cerrar el programa.
 Es a proposito, para no descuadrar la cuenta del ciclo.
