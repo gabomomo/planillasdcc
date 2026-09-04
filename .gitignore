@@ -1,11 +1,14 @@
 # ==========================================================
 #  NUNCA subir archivos con datos de planilla a este repo.
 #  El repositorio es PUBLICO: nombres, cedulas, telefonos y
-#  salarios de 472 personas quedarian expuestos en internet,
-#  y borrarlos despues NO los quita del historial de Git.
+#  salarios quedarian expuestos en internet, y borrarlos
+#  despues NO los quita del historial de Git.
+#
+#  Hay un gancho que lo impide: instalelo una sola vez con
+#      git config core.hooksPath .githooks
 # ==========================================================
 
-# Carpetas de trabajo: son datos, no programa
+# Carpetas de trabajo de la version local: son datos, no programa
 Plantillas/
 Horas recibidas/
 Planillas generadas/
@@ -16,6 +19,7 @@ Planillas generadas/
 *.xls
 *.csv
 ~$*
+Respaldo*.json
 
 # Temporales del programa
 .subidas/

@@ -1,0 +1,32 @@
+name: Revisar
+
+on: [push, pull_request]
+
+jobs:
+  motor-unico:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Las dos copias del motor tienen que ser identicas
+        run: |
+          if ! diff -u programa/planilla.py docs/planilla.py; then
+            echo "::error::programa/planilla.py y docs/planilla.py se separaron."
+            echo "Copie uno sobre el otro antes de subir:"
+            echo "   cp programa/planilla.py docs/planilla.py"
+            exit 1
+          fi
+          echo "OK: la version local y la del navegador usan el mismo motor."
+
+      - name: El codigo compila
+        run: python3 -m py_compile programa/planilla.py programa/servidor.py
+
+      - name: No hay datos de planilla en el repositorio
+        run: |
+          encontrados=$(git ls-files | grep -iE '\.(xlsx|xlsm|xls|csv)$' || true)
+          if [ -n "$encontrados" ]; then
+            echo "::error::Hay hojas de calculo en el repositorio:"
+            echo "$encontrados"
+            exit 1
+          fi
+          echo "OK: ningun archivo de datos."

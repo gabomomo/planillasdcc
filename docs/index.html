@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generador de Planilla Bisemanal</title>
+<style>
+  :root{
+    --fondo:#f4f6f9; --tarjeta:#ffffff; --linea:#dde3ec; --texto:#1c2430;
+    --suave:#5d6b7f; --azul:#1f5fa8; --azul-claro:#eaf1fa;
+    --verde:#1d7a4c; --verde-claro:#e6f5ed;
+    --ambar:#8a5d00; --ambar-claro:#fdf3dc;
+    --rojo:#a32020; --rojo-claro:#fbeaea;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fondo);color:var(--texto);
+       font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+  .envoltura{max-width:1080px;margin:0 auto;padding:28px 20px 80px}
+  header{margin-bottom:26px}
+  h1{margin:0 0 4px;font-size:25px;letter-spacing:-.3px}
+  .sub{color:var(--suave);font-size:14px}
+  .tarjeta{background:var(--tarjeta);border:1px solid var(--linea);border-radius:12px;
+           padding:22px;margin-bottom:18px}
+  .paso{display:flex;align-items:center;gap:10px;margin:0 0 16px;font-size:13px;
+        font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--suave)}
+  .num{width:24px;height:24px;border-radius:50%;background:var(--azul);color:#fff;
+       display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+  /* zona de archivo */
+  .zona{border:2px dashed #c3cede;border-radius:10px;padding:30px 20px;text-align:center;
+        background:#fbfcfe;cursor:pointer;transition:.15s}
+  .zona:hover,.zona.encima{border-color:var(--azul);background:var(--azul-claro)}
+  .zona strong{display:block;font-size:16px;margin-bottom:4px}
+  .zona span{color:var(--suave);font-size:13px}
+  .archivo-ok{display:flex;align-items:center;gap:12px;background:var(--verde-claro);
+              border:1px solid #b9e0cb;border-radius:10px;padding:14px 16px}
+  .archivo-ok .nom{font-weight:600;word-break:break-all}
+  .archivo-ok .meta{color:var(--suave);font-size:13px}
+  label.campo{display:block;font-weight:600;margin:0 0 6px;font-size:14px}
+  select,input[type=date]{width:100%;padding:10px 12px;border:1px solid var(--linea);
+       border-radius:8px;font-size:15px;background:#fff;color:var(--texto);font-family:inherit}
+  .fila2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:720px){.fila2{grid-template-columns:1fr}}
+  /* datos detectados */
+  .detectado{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:16px}
+  .dato{background:var(--azul-claro);border:1px solid #cfe0f2;border-radius:9px;padding:12px 14px}
+  .dato .et{font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--azul);font-weight:700}
+  .dato .vl{font-size:16px;font-weight:600;margin-top:3px}
+  .alerta{border-radius:9px;padding:13px 15px;margin-top:14px;font-size:14px;border:1px solid}
+  .alerta.mal{background:var(--rojo-claro);border-color:#f0c2c2;color:var(--rojo)}
+  .alerta.ojo{background:var(--ambar-claro);border-color:#f0dfae;color:var(--ambar)}
+  .alerta.bien{background:var(--verde-claro);border-color:#b9e0cb;color:var(--verde)}
+  /* opciones */
+  .opcion{display:flex;gap:13px;padding:14px 0;border-top:1px solid var(--linea)}
+  .opcion:first-of-type{border-top:0}
+  .opcion input{margin-top:3px;width:19px;height:19px;flex:none;accent-color:var(--azul)}
+  .opcion .tx strong{display:block;font-size:14.5px}
+  .opcion .tx span{color:var(--suave);font-size:13.5px}
+  .reco{background:var(--verde-claro);color:var(--verde);font-size:11px;font-weight:700;
+        padding:2px 7px;border-radius:20px;margin-left:7px;vertical-align:2px;
+        text-transform:uppercase;letter-spacing:.4px}
+  /* botones */
+  button{font:inherit;border:0;border-radius:9px;cursor:pointer;font-weight:600}
+  .principal{background:var(--azul);color:#fff;padding:14px 26px;font-size:16px;width:100%}
+  .principal:hover{background:#184e8c}
+  .principal:disabled{background:#b6c2d2;cursor:not-allowed}
+  .secundario{background:#fff;border:1px solid var(--linea);padding:11px 18px;color:var(--texto)}
+  .secundario:hover{border-color:var(--azul);color:var(--azul)}
+  .descargas{display:flex;gap:12px;flex-wrap:wrap;margin:4px 0 0}
+  .descargar{background:var(--verde);color:#fff;padding:13px 20px;text-decoration:none;border:0;cursor:pointer;font-size:15px;
+             border-radius:9px;font-weight:600;display:inline-block}
+  .descargar:hover{background:#166039}
+  .descargar.alt{background:var(--azul)}.descargar.alt:hover{background:#184e8c}
+  /* resultados */
+  .cifras{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+  .cifra{border:1px solid var(--linea);border-radius:9px;padding:13px 15px}
+  .cifra .et{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--suave);font-weight:700}
+  .cifra .vl{font-size:21px;font-weight:700;margin-top:3px}
+  .cifra.ojo{background:var(--ambar-claro);border-color:#f0dfae}
+  .cifra.ojo .vl,.cifra.ojo .et{color:var(--ambar)}
+  h2{font-size:17px;margin:26px 0 12px}
+  h3{font-size:15px;margin:0 0 4px}
+  .grupo{border:1px solid var(--linea);border-radius:10px;margin-bottom:10px;overflow:hidden;background:#fff}
+  .cabeza{display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;background:#fafbfd}
+  .cabeza:hover{background:#f2f5f9}
+  .cabeza .flecha{color:var(--suave);font-size:12px;transition:.15s}
+  .grupo.abierto .flecha{transform:rotate(90deg)}
+  .pastilla{margin-left:auto;font-size:12.5px;font-weight:700;padding:3px 11px;border-radius:20px;
+            background:var(--verde-claro);color:var(--verde)}
+  .pastilla.ojo{background:var(--ambar-claro);color:var(--ambar)}
+  .cuerpo{display:none;padding:0 16px 16px}
+  .grupo.abierto .cuerpo{display:block}
+  .nota{color:var(--suave);font-size:13.5px;margin:10px 0 12px;padding-left:11px;
+        border-left:3px solid var(--linea)}
+  .tabla-env{overflow-x:auto;border:1px solid var(--linea);border-radius:8px}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:520px}
+  th{background:#f2f5f9;text-align:left;padding:9px 11px;font-weight:700;white-space:nowrap;
+     border-bottom:1px solid var(--linea)}
+  td{padding:8px 11px;border-bottom:1px solid #eef1f6;vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .cargando{text-align:center;padding:36px;color:var(--suave)}
+  .rueda{width:34px;height:34px;border:3px solid var(--linea);border-top-color:var(--azul);
+         border-radius:50%;animation:g .8s linear infinite;margin:0 auto 14px}
+  @keyframes g{to{transform:rotate(360deg)}}
+  .oculto{display:none}
+  .pestanas{display:flex;gap:8px;margin-bottom:18px;border-bottom:2px solid var(--linea)}
+  .pest{background:none;padding:11px 18px;color:var(--suave);font-size:14.5px;
+        border-radius:9px 9px 0 0;margin-bottom:-2px;border-bottom:2px solid transparent}
+  .pest:hover{color:var(--azul)}
+  .pest.activa{color:var(--azul);border-bottom-color:var(--azul);background:#fff}
+  .fila-arch{display:flex;align-items:center;gap:12px;padding:12px 14px;
+             border:1px solid var(--linea);border-radius:9px;margin-bottom:8px;cursor:pointer}
+  .fila-arch:hover{border-color:var(--azul);background:var(--azul-claro)}
+  .fila-arch input{width:19px;height:19px;flex:none;accent-color:var(--azul)}
+  .fila-arch .nm{font-weight:600;font-size:14px}
+  .fila-arch .dt{color:var(--suave);font-size:12.5px}
+  .chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11.5px;
+        font-weight:700;margin-left:6px}
+  .chip.sal{background:var(--verde-claro);color:var(--verde)}
+  .chip.ic{background:var(--azul-claro);color:var(--azul)}
+  .chip.ex{background:var(--rojo-claro);color:var(--rojo)}
+  .chip.ins{background:var(--ambar-claro);color:var(--ambar)}
+  .pie{color:var(--suave);font-size:12.5px;text-align:center;margin-top:26px}
+</style>
+</head>
+<body>
+<div id="arranque" style="position:fixed;inset:0;background:var(--fondo);z-index:200;
+     display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:20px">
+  <div class="rueda" style="width:44px;height:44px"></div>
+  <div style="font-size:18px;font-weight:600;margin-top:18px">Preparando el programa…</div>
+  <div id="arranque-detalle" style="color:var(--suave);font-size:14px;margin-top:6px">
+    La primera vez tarda un poco. Después abre en segundos.</div>
+  <div id="arranque-error" class="alerta mal oculto" style="max-width:520px;margin-top:20px;text-align:left"></div>
+</div>
+
+<div class="envoltura">
+
+  <header>
+    <h1>Generador de Planilla Bisemanal</h1>
+    <div class="sub">Ingeniería Estrella S.A. &middot; todo se procesa en su navegador · nada se sube a internet</div>
+  </header>
+
+  <div class="pestanas">
+    <button class="pest activa" data-vista="planilla">Generar planilla del período</button>
+    <button class="pest" data-vista="ccss">Unificar para la CCSS</button>
+  </div>
+
+  <div id="vista-ccss" class="oculto">
+    <div class="tarjeta">
+      <div class="paso"><span class="num">1</span> Planillas del mes a unificar</div>
+      <div style="color:var(--suave);font-size:13.5px;margin-bottom:14px">
+        Marque las planillas que corresponden al mes que va a reportar. Se suman los
+        días y el bruto de cada persona, y se arma el formato de la CCSS.
+      </div>
+      <div id="lista-generadas"></div>
+    </div>
+    <div class="tarjeta">
+      <div class="paso"><span class="num">2</span> Nombre del reporte</div>
+      <label class="campo" for="etiqueta">Cómo llamar al archivo (por ejemplo el mes)</label>
+      <input type="text" id="etiqueta" placeholder="Agosto 2026"
+             style="width:100%;padding:10px 12px;border:1px solid var(--linea);border-radius:8px;font-size:15px;font-family:inherit">
+      <div style="margin-top:18px">
+        <button class="principal" id="unir" disabled>Unificar</button>
+      </div>
+    </div>
+    <div id="cargando-ccss" class="tarjeta oculto">
+      <div class="cargando"><div class="rueda"></div>Uniendo las planillas…</div>
+    </div>
+    <div id="salida-ccss"></div>
+  </div>
+
+  <div id="vista-planilla">
+
+  <!-- PASO 1 -->
+  <div class="tarjeta">
+    <div class="paso"><span class="num">1</span> Archivo de horas del período</div>
+    <div id="zona" class="zona">
+      <strong>Arrastre aquí el archivo, o haga clic para buscarlo</strong>
+      <span>Es el que dice «Trabajadores … DCC». Formato .xlsx</span>
+    </div>
+    <input type="file" id="entrada" accept=".xlsx,.xlsm" class="oculto">
+    <select id="hguardadas" class="oculto"></select>
+    <div id="guardadas" class="oculto"></div>
+    <div id="archivo" class="archivo-ok oculto">
+      <div style="flex:1">
+        <div class="nom" id="archivo-nombre"></div>
+        <div class="meta" id="archivo-meta"></div>
+      </div>
+      <button class="secundario" id="cambiar">Cambiar</button>
+    </div>
+  </div>
+
+  <!-- PASO 2 -->
+  <div class="tarjeta">
+    <div class="paso"><span class="num">2</span> Plantilla</div>
+    <div id="madre-guardada" class="oculto">
+      <div class="archivo-ok">
+        <div style="flex:1">
+          <div class="nom" id="madre-nombre"></div>
+          <div class="meta">Planilla Madre guardada en este navegador &mdash; no se modifica nunca</div>
+        </div>
+        <button class="secundario" id="cambiar-madre">Cambiar</button>
+      </div>
+    </div>
+    <div id="madre-falta">
+      <div id="zona-madre" class="zona">
+        <strong>Arrastre aquí la Planilla Madre, o haga clic para buscarla</strong>
+        <span>Solo la primera vez: queda guardada para las próximas quincenas</span>
+      </div>
+      <input type="file" id="entrada-madre" accept=".xlsx,.xlsm" class="oculto">
+    </div>
+    <select id="madre" class="oculto"></select>
+    <div id="detectado" class="oculto"></div>
+    <div id="estado" class="oculto" style="margin-top:14px;color:var(--suave);font-size:14px">
+      Analizando el archivo…</div>
+  </div>
+
+  <!-- PASO 3 -->
+  <div class="tarjeta" id="tarjeta-opciones">
+    <div class="paso"><span class="num">3</span> Fecha de pago y criterios</div>
+    <div class="fila2" style="margin-bottom:6px">
+      <div>
+        <label class="campo" for="pago">Fecha de pago</label>
+        <input type="date" id="pago">
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="opcion">
+        <input type="checkbox" id="blancos" checked>
+        <div class="tx"><strong>Rebajar los días en blanco sin color<span class="reco">recomendado</span></strong>
+          <span>Si un día quedó vacío y sin color, no se paga. Igual quedan listados en el reporte.</span></div>
+      </div>
+      <div class="opcion">
+        <input type="checkbox" id="ingresos" checked>
+        <div class="tx"><strong>Pagar proporcional a quien entró a mitad del período<span class="reco">recomendado</span></strong>
+          <span>Los días anteriores a la fecha de ingreso no se pagan.</span></div>
+      </div>
+    </div>
+    <div style="margin-top:18px">
+      <button class="principal" id="generar" disabled>Generar la planilla</button>
+    </div>
+  </div>
+
+  <div id="cargando" class="tarjeta oculto">
+    <div class="cargando"><div class="rueda"></div>
+      Leyendo horas, colores y jornadas…<br><span style="font-size:13px">Toma unos segundos</span></div>
+  </div>
+
+  <div id="salida"></div>
+
+  </div>
+
+  <div class="pie"><a href="/guia" target="_blank" style="color:var(--azul)">Ver la guía de uso</a> &nbsp;·&nbsp; La Planilla Madre nunca se modifica. Todo ocurre dentro de su navegador: los archivos no se suben a ningún servidor.
+  &nbsp;·&nbsp; <a href="#" id="btn-exportar" style="color:var(--azul)">Respaldar mis datos</a>
+  &nbsp;·&nbsp; <a href="#" id="btn-importar" style="color:var(--azul)">Restaurar respaldo</a>
+  &nbsp;·&nbsp; <a href="#" id="btn-salir" style="color:var(--suave)">Salir</a>
+  <input type="file" id="entrada-respaldo" accept=".json" class="oculto"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script src="app.js"></script>
+<script src="ui.js"></script>
+<script src="acceso.js"></script>
+<script>iniciar();</script>
+</body>
+</html>
