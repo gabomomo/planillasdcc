@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generador de Planilla Bisemanal</title>
+<style>
+  :root{
+    --fondo:#f4f6f9; --tarjeta:#ffffff; --linea:#dde3ec; --texto:#1c2430;
+    --suave:#5d6b7f; --azul:#1f5fa8; --azul-claro:#eaf1fa;
+    --verde:#1d7a4c; --verde-claro:#e6f5ed;
+    --ambar:#8a5d00; --ambar-claro:#fdf3dc;
+    --rojo:#a32020; --rojo-claro:#fbeaea;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fondo);color:var(--texto);
+       font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+  .envoltura{max-width:1080px;margin:0 auto;padding:28px 20px 80px}
+  header{margin-bottom:26px}
+  h1{margin:0 0 4px;font-size:25px;letter-spacing:-.3px}
+  .sub{color:var(--suave);font-size:14px}
+  .tarjeta{background:var(--tarjeta);border:1px solid var(--linea);border-radius:12px;
+           padding:22px;margin-bottom:18px}
+  .paso{display:flex;align-items:center;gap:10px;margin:0 0 16px;font-size:13px;
+        font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--suave)}
+  .num{width:24px;height:24px;border-radius:50%;background:var(--azul);color:#fff;
+       display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}
+  /* zona de archivo */
+  .zona{border:2px dashed #c3cede;border-radius:10px;padding:30px 20px;text-align:center;
+        background:#fbfcfe;cursor:pointer;transition:.15s}
+  .zona:hover,.zona.encima{border-color:var(--azul);background:var(--azul-claro)}
+  .zona strong{display:block;font-size:16px;margin-bottom:4px}
+  .zona span{color:var(--suave);font-size:13px}
+  .archivo-ok{display:flex;align-items:center;gap:12px;background:var(--verde-claro);
+              border:1px solid #b9e0cb;border-radius:10px;padding:14px 16px}
+  .archivo-ok .nom{font-weight:600;word-break:break-all}
+  .archivo-ok .meta{color:var(--suave);font-size:13px}
+  label.campo{display:block;font-weight:600;margin:0 0 6px;font-size:14px}
+  select,input[type=date]{width:100%;padding:10px 12px;border:1px solid var(--linea);
+       border-radius:8px;font-size:15px;background:#fff;color:var(--texto);font-family:inherit}
+  .fila2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:720px){.fila2{grid-template-columns:1fr}}
+  /* datos detectados */
+  .detectado{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:16px}
+  .dato{background:var(--azul-claro);border:1px solid #cfe0f2;border-radius:9px;padding:12px 14px}
+  .dato .et{font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--azul);font-weight:700}
+  .dato .vl{font-size:16px;font-weight:600;margin-top:3px}
+  .alerta{border-radius:9px;padding:13px 15px;margin-top:14px;font-size:14px;border:1px solid}
+  .alerta.mal{background:var(--rojo-claro);border-color:#f0c2c2;color:var(--rojo)}
+  .alerta.ojo{background:var(--ambar-claro);border-color:#f0dfae;color:var(--ambar)}
+  .alerta.bien{background:var(--verde-claro);border-color:#b9e0cb;color:var(--verde)}
+  /* opciones */
+  .opcion{display:flex;gap:13px;padding:14px 0;border-top:1px solid var(--linea)}
+  .opcion:first-of-type{border-top:0}
+  .opcion input{margin-top:3px;width:19px;height:19px;flex:none;accent-color:var(--azul)}
+  .opcion .tx strong{display:block;font-size:14.5px}
+  .opcion .tx span{color:var(--suave);font-size:13.5px}
+  .reco{background:var(--verde-claro);color:var(--verde);font-size:11px;font-weight:700;
+        padding:2px 7px;border-radius:20px;margin-left:7px;vertical-align:2px;
+        text-transform:uppercase;letter-spacing:.4px}
+  /* botones */
+  button{font:inherit;border:0;border-radius:9px;cursor:pointer;font-weight:600}
+  .principal{background:var(--azul);color:#fff;padding:14px 26px;font-size:16px;width:100%}
+  .principal:hover{background:#184e8c}
+  .principal:disabled{background:#b6c2d2;cursor:not-allowed}
+  .secundario{background:#fff;border:1px solid var(--linea);padding:11px 18px;color:var(--texto)}
+  .secundario:hover{border-color:var(--azul);color:var(--azul)}
+  .descargas{display:flex;gap:12px;flex-wrap:wrap;margin:4px 0 0}
+  .descargar{background:var(--verde);color:#fff;padding:13px 20px;text-decoration:none;
+             border-radius:9px;font-weight:600;display:inline-block}
+  .descargar:hover{background:#166039}
+  .descargar.alt{background:var(--azul)}.descargar.alt:hover{background:#184e8c}
+  /* resultados */
+  .cifras{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+  .cifra{border:1px solid var(--linea);border-radius:9px;padding:13px 15px}
+  .cifra .et{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--suave);font-weight:700}
+  .cifra .vl{font-size:21px;font-weight:700;margin-top:3px}
+  .cifra.ojo{background:var(--ambar-claro);border-color:#f0dfae}
+  .cifra.ojo .vl,.cifra.ojo .et{color:var(--ambar)}
+  h2{font-size:17px;margin:26px 0 12px}
+  h3{font-size:15px;margin:0 0 4px}
+  .grupo{border:1px solid var(--linea);border-radius:10px;margin-bottom:10px;overflow:hidden;background:#fff}
+  .cabeza{display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;background:#fafbfd}
+  .cabeza:hover{background:#f2f5f9}
+  .cabeza .flecha{color:var(--suave);font-size:12px;transition:.15s}
+  .grupo.abierto .flecha{transform:rotate(90deg)}
+  .pastilla{margin-left:auto;font-size:12.5px;font-weight:700;padding:3px 11px;border-radius:20px;
+            background:var(--verde-claro);color:var(--verde)}
+  .pastilla.ojo{background:var(--ambar-claro);color:var(--ambar)}
+  .cuerpo{display:none;padding:0 16px 16px}
+  .grupo.abierto .cuerpo{display:block}
+  .nota{color:var(--suave);font-size:13.5px;margin:10px 0 12px;padding-left:11px;
+        border-left:3px solid var(--linea)}
+  .tabla-env{overflow-x:auto;border:1px solid var(--linea);border-radius:8px}
+  table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:520px}
+  th{background:#f2f5f9;text-align:left;padding:9px 11px;font-weight:700;white-space:nowrap;
+     border-bottom:1px solid var(--linea)}
+  td{padding:8px 11px;border-bottom:1px solid #eef1f6;vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .cargando{text-align:center;padding:36px;color:var(--suave)}
+  .rueda{width:34px;height:34px;border:3px solid var(--linea);border-top-color:var(--azul);
+         border-radius:50%;animation:g .8s linear infinite;margin:0 auto 14px}
+  @keyframes g{to{transform:rotate(360deg)}}
+  .oculto{display:none}
+  .pestanas{display:flex;gap:8px;margin-bottom:18px;border-bottom:2px solid var(--linea)}
+  .pest{background:none;padding:11px 18px;color:var(--suave);font-size:14.5px;
+        border-radius:9px 9px 0 0;margin-bottom:-2px;border-bottom:2px solid transparent}
+  .pest:hover{color:var(--azul)}
+  .pest.activa{color:var(--azul);border-bottom-color:var(--azul);background:#fff}
+  .fila-arch{display:flex;align-items:center;gap:12px;padding:12px 14px;
+             border:1px solid var(--linea);border-radius:9px;margin-bottom:8px;cursor:pointer}
+  .fila-arch:hover{border-color:var(--azul);background:var(--azul-claro)}
+  .fila-arch input{width:19px;height:19px;flex:none;accent-color:var(--azul)}
+  .fila-arch .nm{font-weight:600;font-size:14px}
+  .fila-arch .dt{color:var(--suave);font-size:12.5px}
+  .chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11.5px;
+        font-weight:700;margin-left:6px}
+  .chip.sal{background:var(--verde-claro);color:var(--verde)}
+  .chip.ic{background:var(--azul-claro);color:var(--azul)}
+  .chip.ex{background:var(--rojo-claro);color:var(--rojo)}
+  .chip.ins{background:var(--ambar-claro);color:var(--ambar)}
+  .pie{color:var(--suave);font-size:12.5px;text-align:center;margin-top:26px}
+</style>
+</head>
+<body>
+<div class="envoltura">
+
+  <header>
+    <h1>Generador de Planilla Bisemanal</h1>
+    <div class="sub">Ingeniería Estrella S.A. &middot; todo se procesa en esta computadora</div>
+  </header>
+
+  <div class="pestanas">
+    <button class="pest activa" data-vista="planilla">Generar planilla del período</button>
+    <button class="pest" data-vista="ccss">Unificar para la CCSS</button>
+  </div>
+
+  <div id="vista-ccss" class="oculto">
+    <div class="tarjeta">
+      <div class="paso"><span class="num">1</span> Planillas del mes a unificar</div>
+      <div style="color:var(--suave);font-size:13.5px;margin-bottom:14px">
+        Marque las planillas que corresponden al mes que va a reportar. Se suman los
+        días y el bruto de cada persona, y se arma el formato de la CCSS.
+      </div>
+      <div id="lista-generadas"></div>
+
+      <div id="zona-ccss" class="zona" style="margin-top:16px;padding:22px 20px">
+        <strong>¿Falta alguna? Arrástrela aquí, o haga clic para buscarla</strong>
+        <span>Sirve para planillas de otra computadora o de meses anteriores,
+              aunque no las haya generado este programa. Formato .xlsx</span>
+      </div>
+      <input type="file" id="entrada-ccss" accept=".xlsx,.xlsm" multiple class="oculto">
+      <div id="aviso-ccss"></div>
+    </div>
+    <div class="tarjeta">
+      <div class="paso"><span class="num">2</span> Nombre del reporte</div>
+      <label class="campo" for="etiqueta">Cómo llamar al archivo (por ejemplo el mes)</label>
+      <input type="text" id="etiqueta" placeholder="Agosto 2026"
+             style="width:100%;padding:10px 12px;border:1px solid var(--linea);border-radius:8px;font-size:15px;font-family:inherit">
+      <div style="margin-top:18px">
+        <button class="principal" id="unir" disabled>Unificar</button>
+      </div>
+    </div>
+    <div id="cargando-ccss" class="tarjeta oculto">
+      <div class="cargando"><div class="rueda"></div>Uniendo las planillas…</div>
+    </div>
+    <div id="salida-ccss"></div>
+  </div>
+
+  <div id="vista-planilla">
+
+  <!-- PASO 1 -->
+  <div class="tarjeta">
+    <div class="paso"><span class="num">1</span> Archivo de horas del período</div>
+    <div id="zona" class="zona">
+      <strong>Arrastre aquí el archivo, o haga clic para buscarlo</strong>
+      <span>Es el que dice «Trabajadores … DCC». Formato .xlsx</span>
+    </div>
+    <input type="file" id="entrada" accept=".xlsx,.xlsm" class="oculto">
+    <div id="guardadas" class="oculto" style="margin-top:14px">
+      <label class="campo" for="hguardadas">…o escoja uno de la carpeta «Horas recibidas»</label>
+      <select id="hguardadas"></select>
+    </div>
+    <div id="archivo" class="archivo-ok oculto">
+      <div style="flex:1">
+        <div class="nom" id="archivo-nombre"></div>
+        <div class="meta" id="archivo-meta"></div>
+      </div>
+      <button class="secundario" id="cambiar">Cambiar</button>
+    </div>
+  </div>
+
+  <!-- PASO 2 -->
+  <div class="tarjeta">
+    <div class="paso"><span class="num">2</span> Plantilla</div>
+    <label class="campo" for="madre">Planilla Madre &mdash; se usa como plantilla y <strong>no se modifica</strong></label>
+    <select id="madre"></select>
+    <div id="detectado" class="oculto"></div>
+    <div id="estado" class="oculto" style="margin-top:14px;color:var(--suave);font-size:14px">
+      Analizando el archivo…</div>
+  </div>
+
+  <!-- PASO 3 -->
+  <div class="tarjeta" id="tarjeta-opciones">
+    <div class="paso"><span class="num">3</span> Fecha de pago y criterios</div>
+    <div class="fila2" style="margin-bottom:6px">
+      <div>
+        <label class="campo" for="pago">Fecha de pago</label>
+        <input type="date" id="pago">
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="opcion">
+        <input type="checkbox" id="blancos" checked>
+        <div class="tx"><strong>Rebajar los días en blanco sin color<span class="reco">recomendado</span></strong>
+          <span>Si un día quedó vacío y sin color, no se paga. Igual quedan listados en el reporte.</span></div>
+      </div>
+      <div class="opcion">
+        <input type="checkbox" id="ingresos" checked>
+        <div class="tx"><strong>Pagar proporcional a quien entró a mitad del período<span class="reco">recomendado</span></strong>
+          <span>Los días anteriores a la fecha de ingreso no se pagan.</span></div>
+      </div>
+    </div>
+    <div style="margin-top:18px">
+      <button class="principal" id="generar" disabled>Generar la planilla</button>
+    </div>
+  </div>
+
+  <div id="cargando" class="tarjeta oculto">
+    <div class="cargando"><div class="rueda"></div>
+      Leyendo horas, colores y jornadas…<br><span style="font-size:13px">Toma unos segundos</span></div>
+  </div>
+
+  <div id="salida"></div>
+
+  </div>
+
+  <div class="pie"><a href="/guia" target="_blank" style="color:var(--azul)">Ver la guía de uso</a> &nbsp;·&nbsp; La Planilla Madre nunca se modifica: se usa como plantilla. Cada corrida deja su archivo en la carpeta &laquo;Planillas generadas&raquo;.</div>
+</div>
+
+<script>
+(function(){
+  var $=function(s){return document.querySelector(s)};
+  var archivoSubido=null, idSubida=null, pidiendo=null, fechaTocada=false;
+  var nombreEnCarpeta=null;
+
+  function estado(t){
+    var e=$('#estado');
+    if(!t){e.classList.add('oculto');return}
+    e.classList.remove('oculto'); e.textContent=t;
+  }
+  function fallo(msg){
+    var c=$('#detectado'); c.classList.remove('oculto');
+    c.innerHTML='<div class="alerta mal"><strong>No se pudo revisar el archivo.</strong><br>'+
+      msg+'<div style="margin-top:10px"><button class="secundario" id="reintentar">Reintentar</button></div></div>';
+    var b=document.getElementById('reintentar');
+    if(b) b.addEventListener('click',function(){cargarArchivos(0);subirYRevisar()});
+    // la revision previa es informativa: igual se puede generar
+    $('#generar').disabled=!(archivoSubido||idSubida||nombreEnCarpeta);
+  }
+
+  function fmt(v){
+    if(typeof v==='number') return v.toLocaleString('es-CR',{maximumFractionDigits:2});
+    return v===null||v===undefined?'':String(v);
+  }
+  function esNum(v){return typeof v==='number'}
+
+  // ---- aviso si esta pantalla quedo vieja (otro arranque del programa) ----
+  var versionPantalla=null;
+  function vigilarVersion(){
+    fetch('/salud',{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){
+      if(versionPantalla===null){versionPantalla=d.version;return}
+      if(d.version!==versionPantalla) avisoVieja();
+    }).catch(function(){});
+  }
+  function avisoVieja(){
+    if(document.getElementById('vieja')) return;
+    var b=document.createElement('div');
+    b.id='vieja';
+    b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99;background:#8a5d00;'+
+      'color:#fff;padding:12px 16px;text-align:center;font-weight:600';
+    b.innerHTML='Esta pantalla quedó desactualizada. '+
+      '<button onclick="location.reload()" style="margin-left:10px;background:#fff;'+
+      'color:#8a5d00;padding:6px 14px;border-radius:7px">Recargar</button>';
+    document.body.appendChild(b);
+  }
+  vigilarVersion();
+  setInterval(vigilarVersion,20000);
+
+  // ---- lista de archivos de la carpeta ----
+  var avisoLista=null;
+  function mensajeLista(txt, reintentar){
+    if(avisoLista) avisoLista.remove();
+    avisoLista=document.createElement('div');
+    avisoLista.className='alerta mal';
+    avisoLista.innerHTML=txt+(reintentar?'<div style="margin-top:10px">'+
+      '<button class="secundario" id="recargar-lista">Reintentar</button></div>':'');
+    $('#madre').parentNode.insertBefore(avisoLista,$('#madre').nextSibling);
+    var b=document.getElementById('recargar-lista');
+    if(b) b.addEventListener('click',function(){cargarArchivos(0)});
+  }
+
+  function cargarArchivos(intento){
+    intento=intento||0;
+    fetch('/archivos',{cache:'no-store'})
+      .then(function(r){
+        if(!r.ok) throw new Error('El programa respondió '+r.status);
+        return r.json();
+      })
+      .then(function(d){
+        if(avisoLista){avisoLista.remove();avisoLista=null}
+        var sel=$('#madre'); sel.innerHTML='';
+        var madres=d.archivos.filter(function(a){return a.es_madre});
+        if(!madres.length) madres=d.archivos;
+        if(!madres.length){
+          mensajeLista('<strong>No hay ningún archivo de Excel en la carpeta.</strong><br>'+
+            'Ponga la Planilla Madre en:<br><code>'+d.carpeta+'</code>',true);
+          $('#generar').disabled=true;
+          return;
+        }
+        madres.forEach(function(a){
+          var o=document.createElement('option');
+          o.value=a.nombre;
+          o.textContent=a.nombre+'   ('+a.modificado+')';
+          sel.appendChild(o);
+        });
+        var reciente=madres.slice().sort(function(a,b){
+          return (b.mtime||0)-(a.mtime||0)})[0];
+        if(reciente) sel.value=reciente.nombre;
+
+        var hs=$('#hguardadas');
+        if(d.horas && d.horas.length){
+          hs.innerHTML='<option value="">— escoja uno —</option>';
+          d.horas.forEach(function(a){
+            var o=document.createElement('option');
+            o.value=a.nombre; o.textContent=a.nombre+'   ('+a.modificado+')';
+            hs.appendChild(o);
+          });
+          $('#guardadas').classList.remove('oculto');
+        }else{
+          $('#guardadas').classList.add('oculto');
+        }
+        inspeccionar();
+      })
+      .catch(function(e){
+        // reintenta solo un par de veces por si el programa esta arrancando
+        if(intento<3){setTimeout(function(){cargarArchivos(intento+1)},1200);return}
+        mensajeLista('<strong>No se pudo contactar al programa.</strong><br>'+
+          'La ventana negra del programa está cerrada o se reinició.<br>'+
+          '<span style="font-size:13px">Ábralo con doble clic en «Generar Planilla» '+
+          'y presione Reintentar, o recargue esta pantalla.</span>',true);
+        $('#generar').disabled=true;
+      });
+  }
+  cargarArchivos(0);
+
+  // ---- seleccion del archivo de horas ----
+  var zona=$('#zona'), entrada=$('#entrada');
+  zona.addEventListener('click',function(){entrada.click()});
+  ['dragenter','dragover'].forEach(function(e){
+    zona.addEventListener(e,function(ev){ev.preventDefault();zona.classList.add('encima')})});
+  ['dragleave','drop'].forEach(function(e){
+    zona.addEventListener(e,function(ev){ev.preventDefault();zona.classList.remove('encima')})});
+  zona.addEventListener('drop',function(ev){
+    if(ev.dataTransfer.files.length) tomar(ev.dataTransfer.files[0]);
+  });
+  entrada.addEventListener('change',function(){if(entrada.files.length)tomar(entrada.files[0])});
+  $('#cambiar').addEventListener('click',function(){
+    archivoSubido=null; idSubida=null; nombreEnCarpeta=null; estado('');
+    $('#archivo').classList.add('oculto'); $('#hguardadas').value='';
+    if($('#hguardadas').options.length>1) $('#guardadas').classList.remove('oculto');
+    zona.classList.remove('oculto'); $('#detectado').classList.add('oculto');
+    $('#generar').disabled=true;
+  });
+
+  function tomar(f){
+    if(!/\.xls[xm]$/i.test(f.name)){alert('Debe ser un archivo de Excel (.xlsx)');return}
+    archivoSubido=f; idSubida=null; nombreEnCarpeta=null;
+    $('#archivo-nombre').textContent=f.name;
+    $('#archivo-meta').textContent=Math.round(f.size/1024).toLocaleString('es-CR')+' KB';
+    $('#archivo').classList.remove('oculto');
+    zona.classList.add('oculto');
+    subirYRevisar();
+  }
+
+  // El archivo se sube UNA sola vez; despues solo se manda su identificador.
+  function subirYRevisar(){
+    if(!archivoSubido){ if(nombreEnCarpeta) inspeccionar(); return; }
+    $('#detectado').classList.add('oculto');
+    estado('Subiendo el archivo…');
+    var fd=new FormData(); fd.append('horas',archivoSubido);
+    fetch('/subir',{method:'POST',body:fd})
+      .then(function(r){
+        if(!r.ok) throw new Error('El programa respondio '+r.status);
+        return r.json();
+      })
+      .then(function(d){
+        if(!d.ok) throw new Error(d.error||'No se pudo leer el archivo.');
+        idSubida=d.id;
+        inspeccionar();
+      })
+      .catch(function(e){
+        estado('');
+        fallo(String(e.message||e)+'<br><span style="font-size:13px">Si la ventana negra del programa se cerro, vuelva a abrirlo con doble clic.</span>');
+      });
+  }
+
+  $('#hguardadas').addEventListener('change',function(){
+    var n=$('#hguardadas').value;
+    if(!n) return;
+    archivoSubido=null; idSubida=null; nombreEnCarpeta=n;
+    $('#archivo-nombre').textContent=n;
+    $('#archivo-meta').textContent='de la carpeta «Horas recibidas»';
+    $('#archivo').classList.remove('oculto');
+    zona.classList.add('oculto'); $('#guardadas').classList.add('oculto');
+    inspeccionar();
+  });
+
+  $('#madre').addEventListener('change',inspeccionar);
+  // si la persona escribe la fecha a mano, se respeta; si no, se recalcula sola
+  $('#pago').addEventListener('input',function(){fechaTocada=true});
+  $('#pago').addEventListener('change',function(){inspeccionar()});
+
+  // ---- inspeccion previa ----
+  function inspeccionar(){
+    if(!(idSubida||nombreEnCarpeta)||!$('#madre').value) return;
+    if(pidiendo) pidiendo.abort();
+    pidiendo=new AbortController();
+    estado('Revisando el período y la Planilla Madre…');
+    var fd=new FormData();
+    if(idSubida) fd.append('id',idSubida); else fd.append('horas',nombreEnCarpeta);
+    fd.append('madre',$('#madre').value);
+    if($('#pago').value) fd.append('pago',$('#pago').value);
+    fetch('/inspeccionar',{method:'POST',body:fd,signal:pidiendo.signal})
+      .then(function(r){
+        if(!r.ok) throw new Error('El programa respondio '+r.status);
+        return r.json();
+      }).then(function(d){
+        pidiendo=null; estado('');
+        var c=$('#detectado'); c.classList.remove('oculto');
+        if(!d.ok){c.innerHTML='<div class="alerta mal">'+d.error+'</div>';
+          $('#generar').disabled=true;return}
+        var h='<div class="detectado">'+
+          '<div class="dato"><div class="et">Período detectado</div><div class="vl">'+d.inicio+' al '+d.fin+'</div></div>'+
+          '<div class="dato"><div class="et">Duración</div><div class="vl">'+d.dias+' días</div></div>'+
+          '<div class="dato"><div class="et">Ventana de renta</div><div class="vl">'+
+            (d.ventana===1?'Abre':'Cierra')+'</div></div></div>'+
+          '<div class="alerta bien" style="background:#f7f9fc;border-color:var(--linea);color:var(--texto)">'+
+          (d.primera
+            ? '<strong>Primera corrida.</strong> No hay planillas generadas todavía, así que se arranca desde la plantilla.'
+            : '<strong>Continúa desde:</strong> '+d.estado)+
+          (d.salida?'<br><span style="color:var(--suave);font-size:13px">Va a generar: <strong>'+d.salida+'</strong>'+
+            (d.ya_existe?' &mdash; ya existe uno con ese nombre y se va a reemplazar':'')+'</span>':'')+
+          '</div>';
+        if(!d.ciclo_ok) h+='<div class="alerta mal"><strong>El período no tiene 14 días.</strong> El ciclo es bisemanal: revise la fila 2 de la hoja «Horas de trabajo».</div>';
+        if(d.continuidad) h+='<div class="alerta mal"><strong>Atención con la continuidad.</strong> '+d.continuidad+'</div>';
+        else if(d.periodo_anterior_fin) h+='<div class="alerta bien">El período anterior cerró el '+d.periodo_anterior_fin+' y este arranca justo al día siguiente. El ciclo va bien.</div>';
+        h+='<div class="alerta ojo">'+(d.ventana===1
+            ? '<strong>Este pago ABRE la ventana de renta.</strong> La retención queda en cero y se cobrará completa en el pago siguiente.'
+            : '<strong>Este pago CIERRA la ventana de renta.</strong> Aquí se retiene la renta de los dos pagos.')+'</div>';
+        c.innerHTML=h;
+        if(d.pago_sugerido && !fechaTocada) $('#pago').value=d.pago_sugerido;
+        $('#generar').disabled=false;
+      }).catch(function(e){
+        if(e.name==='AbortError') return;
+        estado('');
+        fallo(String(e.message||e));
+      });
+  }
+
+  // ---- generar ----
+  $('#generar').addEventListener('click',function(){
+    if(!$('#pago').value){alert('Indique la fecha de pago');return}
+    var fd=new FormData();
+    if(idSubida) fd.append('id',idSubida);
+    else if(nombreEnCarpeta) fd.append('horas',nombreEnCarpeta);
+    else fd.append('horas',archivoSubido);
+    fd.append('madre',$('#madre').value);
+    fd.append('pago',$('#pago').value);
+    fd.append('blancos',$('#blancos').checked?'1':'0');
+    fd.append('ingresos',$('#ingresos').checked?'1':'0');
+    $('#cargando').classList.remove('oculto');
+    $('#salida').innerHTML='';
+    $('#generar').disabled=true;
+    fetch('/generar',{method:'POST',body:fd})
+      .then(function(r){return r.json()}).then(function(d){
+        $('#cargando').classList.add('oculto');
+        $('#generar').disabled=false;
+        if(!d.ok){$('#salida').innerHTML='<div class="tarjeta"><div class="alerta mal"><strong>No se pudo generar.</strong><br>'+d.error+'</div></div>';return}
+        pintar(d);
+        $('#salida').scrollIntoView({behavior:'smooth',block:'start'});
+      }).catch(function(e){
+        $('#cargando').classList.add('oculto');
+        $('#generar').disabled=false;
+        $('#salida').innerHTML='<div class="tarjeta"><div class="alerta mal"><strong>No se pudo generar.</strong><br>'+
+          (e.message||e)+'<br><span style="font-size:13px">Si la ventana negra del programa se cerro, vuelva a abrirlo con doble clic e intente otra vez.</span></div></div>';
+      });
+  });
+
+  // ---- resultados ----
+  var DESTACAR={'Incluidos en la planilla':0,'Sin carne (quedaron fuera)':1,
+    'Avisos del ciclo bisemanal':1,'Diferencias de salario':1,
+    'Enlaces rotos en el archivo de horas':1,
+    'Diferencias de bruto vs archivo de horas':1};
+
+  function pintar(d){
+    var h='<div class="tarjeta">'+
+      '<div class="alerta bien" style="margin-top:0"><strong>Listo.</strong> Se generó <strong>'+d.planilla+'</strong> en la carpeta «'+d.carpeta+'». La Planilla Madre no se tocó.</div>'+
+      '<div class="descargas" style="margin:16px 0 4px">'+
+      '<a class="descargar" href="/descargar?f='+encodeURIComponent(d.planilla)+'">Descargar la planilla</a>'+
+      '<a class="descargar alt" href="/descargar?f='+encodeURIComponent(d.reporte)+'">Descargar el reporte en Excel</a></div>'+
+      '<div style="color:var(--suave);font-size:13px;margin-top:12px">Al abrirla en Excel se recalcula sola. La hoja <strong>Verificación</strong> del archivo le confirma que los números dieron correctos.</div></div>';
+
+    // cifras
+    h+='<div class="tarjeta"><h2 style="margin-top:0">Resumen del período</h2><div class="cifras">';
+    d.resumen.forEach(function(p){
+      var k=p[0],v=p[1];
+      if(!k||v===''||k===k.toUpperCase()&&v==='') return;
+      if(!(k in DESTACAR)) return;
+      h+='<div class="cifra'+(DESTACAR[k]&&v>0?' ojo':'')+'"><div class="et">'+k+'</div><div class="vl">'+fmt(v)+'</div></div>';
+    });
+    h+='</div>';
+    h+='<table style="margin-top:20px;min-width:0"><tbody>';
+    d.resumen.forEach(function(p){
+      var k=p[0],v=p[1];
+      if(k===''){h+='<tr><td colspan="2" style="padding:6px 0;border:0"></td></tr>';return}
+      if(v===''){h+='<tr><th colspan="2" style="background:transparent;padding:10px 0 4px;color:var(--azul);border-bottom:1px solid var(--linea)">'+k+'</th></tr>';return}
+      h+='<tr><td style="border:0">'+k+'</td><td class="n" style="border:0;font-weight:600">'+fmt(v)+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+
+    // secciones del reporte
+    h+='<h2>Revisión</h2>';
+    d.sesiones.forEach(function(s,i){
+      var ok=s.cantidad===0;
+      h+='<div class="grupo'+(!ok&&i<4?' abierto':'')+'"><div class="cabeza" data-i="'+i+'">'+
+         '<span class="flecha">&#9654;</span><h3>'+s.titulo+'</h3>'+
+         '<span class="pastilla'+(ok?'':' ojo')+'">'+(ok?'sin novedad':s.cantidad+(s.cantidad===1?' caso':' casos'))+'</span></div>'+
+         '<div class="cuerpo"><div class="nota">'+s.nota+'</div>';
+      if(ok){h+='<div style="color:var(--verde)">Nada que revisar aquí.</div>';}
+      else{
+        h+='<div class="tabla-env"><table><thead><tr>';
+        s.encabezados.forEach(function(e){h+='<th>'+e+'</th>'});
+        h+='</tr></thead><tbody>';
+        s.filas.slice(0,400).forEach(function(f){
+          h+='<tr>';
+          f.forEach(function(v){h+='<td'+(esNum(v)?' class="n"':'')+'>'+fmt(v)+'</td>'});
+          h+='</tr>';
+        });
+        h+='</tbody></table></div>';
+        if(s.filas.length>400) h+='<div class="nota">Se muestran las primeras 400 filas de '+s.filas.length+'. El resto está en el reporte de Excel.</div>';
+      }
+      h+='</div></div>';
+    });
+    $('#salida').innerHTML=h;
+    Array.prototype.forEach.call(document.querySelectorAll('.cabeza'),function(c){
+      c.addEventListener('click',function(){c.parentNode.classList.toggle('abierto')});
+    });
+  }
+
+  // ================= UNIFICACION PARA LA CCSS =================
+  var generadas=[];
+
+  Array.prototype.forEach.call(document.querySelectorAll('.pest'),function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.pest').forEach(function(x){x.classList.remove('activa')});
+      b.classList.add('activa');
+      var v=b.dataset.vista;
+      $('#vista-planilla').classList.toggle('oculto', v!=='planilla');
+      $('#vista-ccss').classList.toggle('oculto', v!=='ccss');
+      if(v==='ccss') cargarGeneradas();
+    });
+  });
+
+  var subidasCCSS=[];   // planillas traidas de otro lado, ya revisadas por el programa
+  var marcadas={};      // que filas quedan marcadas, para no perderlas al redibujar
+
+  function claveFila(a){ return a.subido ? 'sub:'+a.id : 'gen:'+a.nombre }
+
+  function todasLasPlanillas(){
+    // las subidas de primero: son las que la persona acaba de agregar
+    return subidasCCSS.concat(generadas);
+  }
+
+  function pintarLista(){
+    var cont=$('#lista-generadas');
+    var todas=todasLasPlanillas();
+    if(!todas.length){
+      cont.innerHTML='<div class="alerta ojo">Todavía no hay planillas generadas. '+
+        'Genere primero las del mes en la pestaña «Generar planilla del período», '+
+        'o suba las que tenga guardadas en otro lado.</div>';
+      revisarSeleccion(); return;
+    }
+    var h='';
+    todas.forEach(function(a){
+      var k=claveFila(a);
+      h+='<label class="fila-arch"><input type="checkbox" class="ck-gen" value="'+k+'"'+
+         (marcadas[k]?' checked':'')+'>'+
+         '<span style="flex:1"><span class="nm">Pago del '+a.pago+'</span>'+
+         '<span class="dt"> &nbsp;·&nbsp; período '+a.periodo+'</span>'+
+         (a.subido?'<span class="chip ic">subida</span>':'')+
+         '<br><span class="dt">'+a.nombre+
+         (a.personas?(' &nbsp;·&nbsp; '+a.personas+' personas'):'')+
+         (a.origen?(' &nbsp;·&nbsp; '+a.origen):'')+'</span></span>'+
+         (a.subido?'<button class="secundario quitar" data-k="'+k+'" '+
+                   'style="padding:6px 12px">Quitar</button>':'')+
+         '</label>';
+    });
+    cont.innerHTML=h;
+    Array.prototype.forEach.call(cont.querySelectorAll('.ck-gen'),function(c){
+      c.addEventListener('change',function(){
+        marcadas[c.value]=c.checked; revisarSeleccion();
+      });
+    });
+    Array.prototype.forEach.call(cont.querySelectorAll('.quitar'),function(b){
+      b.addEventListener('click',function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        var k=b.dataset.k;
+        subidasCCSS=subidasCCSS.filter(function(x){return claveFila(x)!==k});
+        delete marcadas[k];
+        pintarLista();
+      });
+    });
+    revisarSeleccion();
+  }
+
+  function cargarGeneradas(){
+    var cont=$('#lista-generadas');
+    if(!generadas.length && !subidasCCSS.length)
+      cont.innerHTML='<div style="color:var(--suave)">Buscando planillas generadas…</div>';
+    fetch('/generadas',{cache:'no-store'})
+      .then(function(r){if(!r.ok)throw new Error('El programa respondió '+r.status);return r.json()})
+      .then(function(d){
+        generadas=d.archivos;
+        // la primera vez se preseleccionan las del mes mas reciente
+        if(generadas.length && !Object.keys(marcadas).length){
+          var mes=generadas[0].mes;
+          generadas.forEach(function(a){ if(a.mes===mes) marcadas[claveFila(a)]=true });
+        }
+        pintarLista();
+      })
+      .catch(function(e){
+        if(subidasCCSS.length){ pintarLista(); return; }
+        cont.innerHTML='<div class="alerta mal"><strong>No se pudo contactar al programa.</strong><br>'+
+          (e.message||e)+'</div>';
+        $('#unir').disabled=true;
+      });
+  }
+
+  // ---- subir planillas de otro lado ----
+  var zonaC=$('#zona-ccss'), entradaC=$('#entrada-ccss');
+  zonaC.addEventListener('click',function(){entradaC.click()});
+  ['dragenter','dragover'].forEach(function(e){
+    zonaC.addEventListener(e,function(ev){ev.preventDefault();zonaC.classList.add('encima')})});
+  ['dragleave','drop'].forEach(function(e){
+    zonaC.addEventListener(e,function(ev){ev.preventDefault();zonaC.classList.remove('encima')})});
+  zonaC.addEventListener('drop',function(ev){subirPlanillas(ev.dataTransfer.files)});
+  entradaC.addEventListener('change',function(){
+    subirPlanillas(entradaC.files); entradaC.value='';
+  });
+
+  function avisoCCSS(txt,clase){
+    $('#aviso-ccss').innerHTML = txt
+      ? '<div class="alerta '+(clase||'mal')+'" style="margin-top:12px">'+txt+'</div>' : '';
+  }
+
+  function subirPlanillas(archivos){
+    var lista=Array.prototype.slice.call(archivos||[]);
+    if(!lista.length) return;
+    avisoCCSS('Revisando '+(lista.length===1?'la planilla':'las planillas')+'…','ojo');
+    var errores=[], pendientes=lista.length;
+    lista.forEach(function(f){
+      if(!/\.xls[xm]$/i.test(f.name)){
+        errores.push('<strong>'+f.name+'</strong>: no es un archivo de Excel');
+        if(!--pendientes) terminar();
+        return;
+      }
+      var fd=new FormData(); fd.append('planilla',f);
+      fetch('/subir-planilla',{method:'POST',body:fd})
+        .then(function(r){
+          if(!r.ok) throw new Error('El programa respondió '+r.status);
+          return r.json();
+        })
+        .then(function(d){
+          if(!d.ok) throw new Error(d.error||'No se pudo leer el archivo.');
+          var yaEsta=todasLasPlanillas().some(function(a){return a.pago===d.pago});
+          if(yaEsta){
+            errores.push('<strong>'+d.nombre+'</strong>: ya hay una planilla del pago '+
+                         'del '+d.pago+' en la lista');
+          }else{
+            subidasCCSS.unshift(d);
+            marcadas[claveFila(d)]=true;
+          }
+        })
+        .catch(function(e){
+          errores.push('<strong>'+f.name+'</strong>: '+(e.message||e));
+        })
+        .then(function(){ if(!--pendientes) terminar() });
+    });
+    function terminar(){
+      pintarLista();
+      avisoCCSS(errores.length
+        ? 'No se pudo agregar:<br>'+errores.join('<br>') : '');
+    }
+  }
+
+  function seleccionadas(){
+    return Array.prototype.filter.call(document.querySelectorAll('.ck-gen'),
+      function(c){return c.checked}).map(function(c){return c.value});
+  }
+
+  function revisarSeleccion(){
+    var sel=seleccionadas();
+    $('#unir').disabled = sel.length===0;
+    if(sel.length && !$('#etiqueta').value){
+      var m=todasLasPlanillas().filter(function(a){return sel.indexOf(claveFila(a))>=0});
+      m.sort(function(a,b){return (a.mes||'')<(b.mes||'')?-1:1});
+      if(m.length && m[m.length-1].mes){
+        var MES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio',
+                 'Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
+        var p=m[m.length-1].mes.split('/');
+        $('#etiqueta').value=MES[parseInt(p[0],10)]+' '+p[1];
+      }
+    }
+  }
+
+  $('#unir').addEventListener('click',function(){
+    var sel=seleccionadas();
+    if(!sel.length) return;
+    var fd=new FormData();
+    fd.append('archivos',sel.filter(function(k){return k.indexOf('gen:')===0})
+                            .map(function(k){return k.slice(4)}).join('|'));
+    fd.append('subidos',sel.filter(function(k){return k.indexOf('sub:')===0})
+                           .map(function(k){return k.slice(4)}).join('|'));
+    fd.append('etiqueta',$('#etiqueta').value||'');
+    $('#cargando-ccss').classList.remove('oculto');
+    $('#salida-ccss').innerHTML=''; $('#unir').disabled=true;
+    fetch('/unificar',{method:'POST',body:fd})
+      .then(function(r){if(!r.ok)throw new Error('El programa respondió '+r.status);return r.json()})
+      .then(function(d){
+        $('#cargando-ccss').classList.add('oculto'); $('#unir').disabled=false;
+        if(!d.ok){$('#salida-ccss').innerHTML='<div class="tarjeta"><div class="alerta mal"><strong>No se pudo unificar.</strong><br>'+d.error+'</div></div>';return}
+        pintarCCSS(d);
+        $('#salida-ccss').scrollIntoView({behavior:'smooth',block:'start'});
+      })
+      .catch(function(e){
+        $('#cargando-ccss').classList.add('oculto'); $('#unir').disabled=false;
+        $('#salida-ccss').innerHTML='<div class="tarjeta"><div class="alerta mal"><strong>No se pudo unificar.</strong><br>'+
+          (e.message||e)+'</div></div>';
+      });
+  });
+
+  function pintarCCSS(d){
+    var ORD=['SAL','IC','EX','INS'];
+    var NOM={SAL:'Salario',IC:'Inclusión',EX:'Exclusión',INS:'Incapacidad'};
+    var h='<div class="tarjeta">'+
+      '<div class="alerta bien" style="margin-top:0"><strong>Listo.</strong> Se generó <strong>'+d.archivo+'</strong> en la carpeta «'+d.carpeta+'».</div>'+
+      '<div class="descargas" style="margin:16px 0 4px">'+
+      '<a class="descargar" href="/descargar?f='+encodeURIComponent(d.archivo)+'">Descargar el reporte</a></div></div>';
+
+    h+='<div class="tarjeta"><h2 style="margin-top:0">Resumen</h2><div class="cifras">'+
+       '<div class="cifra"><div class="et">Personas</div><div class="vl">'+d.personas+'</div></div>'+
+       '<div class="cifra"><div class="et">Días laborados</div><div class="vl">'+fmt(d.dias)+'</div></div>'+
+       '<div class="cifra"><div class="et">Total bruto</div><div class="vl">'+fmt(d.bruto)+'</div></div>';
+    ORD.forEach(function(e){
+      if(d.estados[e]) h+='<div class="cifra"><div class="et">'+e+' — '+NOM[e]+'</div><div class="vl">'+d.estados[e]+'</div></div>';
+    });
+    h+='</div><div style="margin-top:16px;color:var(--suave);font-size:13.5px">Planillas unidas: '+
+       d.periodos.map(function(p){
+         return 'pago del '+p.pago+(p.origen?' <span style="opacity:.7">('+p.origen+')</span>':'')
+       }).join(' &nbsp;·&nbsp; ')+'</div></div>';
+
+    h+='<h2>Revisión antes de enviar</h2>';
+    d.secciones.forEach(function(s,i){
+      var ok=s.cantidad===0;
+      h+='<div class="grupo'+(!ok&&i<3?' abierto':'')+'"><div class="cabeza">'+
+         '<span class="flecha">&#9654;</span><h3>'+s.titulo+'</h3>'+
+         '<span class="pastilla'+(ok?'':' ojo')+'">'+(ok?'sin novedad':s.cantidad+(s.cantidad===1?' caso':' casos'))+'</span></div>'+
+         '<div class="cuerpo">';
+      if(ok) h+='<div style="color:var(--verde);padding-top:10px">Nada que revisar aquí.</div>';
+      else{
+        h+='<div class="tabla-env" style="margin-top:12px"><table><thead><tr>';
+        s.encabezados.forEach(function(e){h+='<th>'+e+'</th>'});
+        h+='</tr></thead><tbody>';
+        s.filas.slice(0,300).forEach(function(f){
+          h+='<tr>'; f.forEach(function(v){h+='<td'+(esNum(v)?' class="n"':'')+'>'+fmt(v)+'</td>'}); h+='</tr>';
+        });
+        h+='</tbody></table></div>';
+      }
+      h+='</div></div>';
+    });
+
+    h+='<h2>Union Final</h2><div class="tarjeta"><div class="tabla-env"><table><thead><tr>'+
+       ['Carné','Días','Puesto','Nombre','Identificación','Bruto','Estado','Fecha IC','Fecha EX']
+         .map(function(x){return '<th>'+x+'</th>'}).join('')+'</tr></thead><tbody>';
+    d.muestra.slice(0,300).forEach(function(f){
+      h+='<tr>';
+      f.forEach(function(v,i){
+        if(i===6) h+='<td><span class="chip '+String(v).toLowerCase()+'">'+v+'</span></td>';
+        else h+='<td'+(esNum(v)?' class="n"':'')+'>'+fmt(v)+'</td>';
+      });
+      h+='</tr>';
+    });
+    h+='</tbody></table></div>';
+    if(d.muestra.length>300) h+='<div class="nota">Se muestran las primeras 300 de '+d.muestra.length+'. El archivo trae todas.</div>';
+    h+='</div>';
+
+    $('#salida-ccss').innerHTML=h;
+    Array.prototype.forEach.call($('#salida-ccss').querySelectorAll('.cabeza'),function(c){
+      c.addEventListener('click',function(){c.parentNode.classList.toggle('abierto')});
+    });
+  }
+})();
+</script>
+</body>
+</html>

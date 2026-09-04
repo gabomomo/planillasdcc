@@ -1,0 +1,26 @@
+# ==========================================================
+#  NUNCA subir archivos con datos de planilla a este repo.
+#  El repositorio es PUBLICO: nombres, cedulas, telefonos y
+#  salarios de 472 personas quedarian expuestos en internet,
+#  y borrarlos despues NO los quita del historial de Git.
+# ==========================================================
+
+# Carpetas de trabajo: son datos, no programa
+Plantillas/
+Horas recibidas/
+Planillas generadas/
+
+# Cualquier hoja de calculo, este donde este
+*.xlsx
+*.xlsm
+*.xls
+*.csv
+~$*
+
+# Temporales del programa
+.subidas/
+__pycache__/
+*.pyc
+
+.DS_Store
+Thumbs.db

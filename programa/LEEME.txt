@@ -1,0 +1,423 @@
+====================================================================
+  GENERADOR DE PLANILLA BISEMANAL
+  Ingenieria Estrella S.A.
+====================================================================
+
+COMO ESTA ORGANIZADA LA CARPETA
+-------------------------------
+
+   Generar Planilla.command          <- doble clic (Mac)
+   Generar Planilla (Windows).bat    <- doble clic (Windows)
+   LEEME.txt                          <- esta guia
+
+   Plantillas/            la Planilla Madre. NO se modifica nunca.
+                          Aqui tambien esta el archivo de Unificacion
+                          de julio, como referencia del formato CCSS.
+
+   Horas recibidas/       guarde aqui el archivo de horas de cada
+                          periodo (el que dice "Trabajadores ... DCC").
+                          Es opcional: tambien puede arrastrarlo a la
+                          pantalla desde donde lo tenga.
+
+   Planillas generadas/   todo lo que produce el programa:
+                          las planillas, los reportes de revision y
+                          las unificaciones para la CCSS.
+                          NO ponga aqui planillas de otro lado: de esta
+                          carpeta el programa saca donde cerro el periodo
+                          anterior. Si necesita unificar una planilla de
+                          afuera, SUBALA desde la pantalla (ver abajo).
+
+   programa/              el codigo y la libreria. NO tocar.
+
+Solo hay DOS cosas que usted abre: el archivo de doble clic y la
+carpeta "Planillas generadas". El resto se maneja solo.
+
+
+PARA LLEVARLO A OTRA COMPUTADORA
+--------------------------------
+
+Copie la CARPETA COMPLETA (con todo lo que tiene adentro) y listo.
+No hay que instalar nada: la libreria que lee Excel viene incluida
+en "programa/lib".
+
+Si quiere llevar SOLO el programa, sin los datos, copie:
+   Generar Planilla.command
+   Generar Planilla (Windows).bat
+   LEEME.txt
+   programa/
+y en la computadora nueva cree las carpetas Plantillas,
+Horas recibidas y Planillas generadas (o deje que el programa cree
+esta ultima sola).
+
+Lo unico que la computadora necesita es el motor PYTHON 3.
+La mayoria ya lo tiene. Si falta, al dar doble clic aparece un
+cuadro de dialogo del sistema (no una pantalla tecnica) que se lo
+dice y le ofrece instalarlo:
+
+   Mac      "Quiere abrir el instalador de Apple ahora?"
+            Botones:  [Ahora no]  [Abrir el instalador]
+            Se abre el instalador OFICIAL de Apple. Unos minutos,
+            necesita internet. Al terminar, vuelva a dar doble clic.
+
+   Windows  Use "Generar Planilla (Windows).bat".
+            "Quiere abrir la pagina de descarga ahora?"
+            Botones:  [Si]  [No]
+            Descargue Python de python.org y durante la instalacion
+            MARQUE la casilla "Add python.exe to PATH".
+            Al terminar, vuelva a dar doble clic en el .bat.
+
+Funciona igual en Mac y en Windows: revisa, avisa y pregunta.
+
+OJO: ese aviso NO puede salir dentro de la pantalla del navegador.
+La pantalla del navegador la genera el propio programa; si falta el
+motor, no hay pantalla que mostrar. Por eso el aviso sale antes,
+como cuadro de dialogo del sistema.
+
+POR QUE NO SE INSTALA SOLO
+   Porque es un componente del sistema: pide autorizacion y, en
+   Windows, la clave de administrador. Un programa de planilla no
+   debe instalar cosas en la computadora sin que usted lo vea. Por
+   eso se lo pregunta y abre el instalador oficial, en lugar de
+   bajar e instalar cosas por su cuenta.
+
+Fuera de eso NO hace falta internet: el programa funciona sin
+conexion, y la libreria que lee Excel viene incluida.
+
+
+COMO SE USA
+-----------
+
+1. Doble clic en:   Generar Planilla.command
+   (en Windows:     Generar Planilla (Windows).bat )
+
+   Se abre una ventana negra (dejela abierta) y enseguida se abre
+   solo el navegador con la pantalla del generador.
+
+2. PASO 1: el archivo de horas del periodo. Dos formas:
+      - arrastrelo a la pantalla, o
+      - escojalo del desplegable si ya lo guardo en la carpeta
+        "Horas recibidas"
+
+3. PASO 2: la Planilla Madre. Es SIEMPRE la misma y viene
+   preseleccionada. Es una PLANTILLA: el programa nunca la modifica.
+   Apenas la elige, la pantalla le muestra:
+      - el periodo detectado y si tiene los 14 dias
+      - si arranca justo donde cerro el periodo anterior
+      - si este pago abre o cierra la ventana de renta
+      - de cual corrida anterior continua
+      - como se va a llamar el archivo que va a generar
+
+4. PASO 3: confirme la fecha de pago (viene calculada) y los dos
+   criterios, que ya vienen marcados como RECOMENDADO.
+   Clic en "Generar la planilla".
+
+5. En pantalla aparece el resumen y toda la revision, y dos botones
+   para descargar la planilla y el reporte.
+
+6. Al final del mes, en la pestana "Unificar para la CCSS", marque las
+   planillas de ese mes y presione Unificar. Si alguna no esta en la
+   lista, puede subirla desde ahi.
+
+Los archivos quedan guardados en la subcarpeta
+"Planillas generadas", con la FECHA DE PAGO en el nombre:
+
+   * "Planilla Madre LISTA 28-08-2026.xlsx"
+        Es la planilla del pago del 28/08/2026. Abrala en Excel y
+        listo: se recalcula sola. Trae una hoja "Verificacion"
+        (la ultima, con la pestana verde) que le confirma que los
+        numeros dieron correctos.
+
+   * "Reporte de revision 28-08-2026.xlsx"
+        Lo mismo que sale en pantalla, por si lo quiere guardar
+        o enviar.
+
+Para cerrar el programa: cierre la ventana negra.
+
+IMPORTANTE: todo se procesa en esta computadora. El archivo NO se
+sube a internet ni sale de aqui. Por eso funciona sin conexion.
+
+
+LA MADRE ES UNA PLANTILLA FIJA
+------------------------------
+
+La "Planilla Madre" NUNCA se modifica. Siempre se usa la misma, en
+todas las corridas, y de ahi sale la estructura, las formulas y la
+Base de datos del Personal.
+
+Cada corrida deja su propio archivo en "Planillas generadas", con la
+fecha de pago en el nombre. Asi queda el registro completo de todos
+los pagos del ano y nunca se pisa nada.
+
+   Plantillas/
+        Planilla Madre ... .xlsx     <- plantilla, no se toca
+   Planillas generadas/
+        Planilla Madre LISTA 14-08-2026.xlsx
+        Planilla Madre LISTA 28-08-2026.xlsx
+        Planilla Madre LISTA 11-09-2026.xlsx
+        ...
+
+Lo unico que se arrastra de un pago al siguiente son dos cosas:
+donde cerro el periodo anterior, y en que mitad va la ventana de
+renta. El programa las toma SOLO de la ultima planilla generada, y
+lo dice en pantalla ("Continua desde: ...").
+
+Si vuelve a correr un pago que ya habia generado, el programa NO
+toma su propio resultado anterior: vuelve a partir del pago previo.
+Asi puede repetir una corrida las veces que quiera sin descuadrar
+la ventana de renta.
+
+CUANDO ENTRA GENTE NUEVA
+   Agreguela en la hoja "Base de datos del Personal" DE LA PLANTILLA
+   (la Planilla Madre). Es el unico caso en que hay que editarla, y
+   no lo hace el programa: lo hace usted.
+
+
+LOS DOS CRITERIOS DEL PASO 3
+----------------------------
+
+1) "Rebajar los dias en blanco sin color"   RECOMENDADO
+   Si un dia quedo vacio y sin color, no se paga.
+   Sin marcar = se paga completo igual.
+   Igual quedan listados en la revision.
+
+2) "Pagar proporcional a quien entro a mitad del periodo"  RECOMENDADO
+   Los dias anteriores a la fecha de ingreso no se pagan.
+   Sin marcar = se le pagan los 14 dias completos.
+
+
+LA JORNADA MIXTA Y NOCTURNA (para contabilidad)
+-----------------------------------------------
+
+La Madre CALCULA el diferencial de cada hora mixta y de cada hora
+nocturna, en las columnas Y y AE de la hoja "Nomina Quincena (1)".
+Pero su formula de "Total Salario Bruto" (columna AU) NO las suma:
+solo toma las columnas de horas EXTRA mixtas y nocturnas.
+
+O sea que ese diferencial HOY NO SE PAGA. El programa lo respeta,
+porque su trabajo es llenar la Madre, no cambiar lo que paga.
+
+El monto exacto, persona por persona, sale siempre en la hoja
+"4 Jornada mixta y nocturna" del reporte de revision. Si contabilidad
+decide que si corresponde pagarlo, hay que cambiar la formula de la
+columna AU en la Planilla Madre. Eso no lo hace el programa.
+
+
+LA UNIFICACION PARA LA CCSS
+---------------------------
+
+En la pestana "Unificar para la CCSS" se marcan las planillas del mes
+y el programa las suma: dias y bruto de cada persona, y arma el
+formato con los estados SAL / IC / EX / INS.
+
+Salen listadas solas las que estan en "Planillas generadas". Si le
+falta alguna, ARRASTRELA a la pantalla (o haga clic para buscarla).
+Sirve para:
+
+   - planillas generadas en OTRA computadora
+   - planillas de meses anteriores que tenga guardadas aparte
+   - planillas que NO hizo este programa, llenadas a mano en Excel
+
+En los dos primeros casos el programa lee la hoja de datos que el
+mismo dejo dentro del archivo, y no necesita nada mas.
+
+En el tercero lee los numeros que EXCEL dejo guardados en la hoja
+"Nomina Quincena (1)": carne, dias laborados, salario bruto, nombre,
+cedula, puesto, fecha de ingreso y dias de INS. Por eso ese archivo
+tiene que haberse abierto en Excel y guardado alguna vez. Si nunca se
+abrio, las formulas no tienen resultado y el programa se lo dice.
+
+Al lado de cada planilla, la pantalla le muestra de donde salieron los
+numeros, cuantas personas trae y el periodo que cubre, para que
+confirme antes de unificar.
+
+Las planillas que usted sube NO se copian a "Planillas generadas":
+se usan solo para ese reporte y se descartan al cerrar el programa.
+Es a proposito, para no descuadrar la cuenta del ciclo.
+
+Si marca dos planillas con la MISMA fecha de pago, el programa no
+sigue y se lo dice: se estaria sumando dos veces el mismo periodo.
+
+
+EL CICLO ES BISEMANAL
+---------------------
+
+El pago es cada 14 dias exactos: 26 pagos al ano, NO 24.
+Los periodos no calzan con el inicio ni el fin de mes, asi que hay
+meses con 3 pagos. En 2026 ese mes fue JULIO (03/07, 17/07 y 31/07).
+
+Por eso el programa revisa siempre:
+  - que el periodo tenga 14 dias exactos
+  - que arranque justo el dia siguiente al cierre del periodo
+    anterior (para no dejar dias sin pagar ni pagarlos dos veces)
+  - que la fecha de pago siga la cadencia de 14 dias
+  - si el mes tiene 3 pagos
+
+Eso sale en la hoja "0 Control del ciclo bisemanal" del reporte.
+Si esa hoja esta vacia, el ciclo va bien.
+
+EL IMPUESTO DE RENTA (la herramienta ya lo maneja)
+--------------------------------------------------
+
+La base imponible se arma con DOS pagos consecutivos: eso es una
+"ventana". Cuando un mes recibe 3 pagos, el tercero NO entra en ese
+mes: se corre y arranca la ventana siguiente. Ejemplo real: el pago
+del 31/07/2026 pasa a ser el primero de la ventana de agosto.
+
+La herramienta detecta SOLA en que mitad de la ventana va cada pago,
+mirando la hoja "Rentas" de la Madre. Nadie tiene que llevar la
+cuenta ni acordarse.
+
+  Pago que ABRE la ventana
+      - carga el bruto de cada persona en la 1a casilla
+      - deja la 2a casilla vacia
+      - pone la retencion de renta en CERO
+
+  Pago que CIERRA la ventana
+      - conserva la 1a casilla
+      - carga el bruto de este pago en la 2a
+      - aqui se retiene la renta completa de los dos pagos
+
+Tambien actualiza los rotulos con el mes de la ventana y ajusta el
+rango de busqueda de la formula de renta al tamano real del roster.
+
+En la hoja "0b Impuesto de renta" del reporte queda escrito en que
+posicion iba el pago y que hizo.
+
+  PENDIENTE PARA CONTABILIDAD
+  Son 26 pagos al ano, o sea 13 ventanas, no 12. Como los tramos del
+  impuesto son mensuales, se aplica 13 veces el minimo exento de
+  918.000 en vez de 12, y cada base son 28 dias en lugar de 30.
+  Conviene confirmarlo con quien lleva la contabilidad.
+
+
+QUE TRAE EL REPORTE DE REVISION
+-------------------------------
+
+Resumen ........... totales del periodo de un vistazo
+0a De donde salio
+  cada cosa ....... de cual plantilla salio la estructura y de cual
+                    planilla generada salio el estado del ciclo
+0 Control del
+  ciclo bisemanal . huecos, traslapes o fechas fuera de cadencia
+0b Impuesto de
+  renta ........... en que mitad de la ventana va este pago, y la
+                    base imponible y renta de cada persona
+1 Sin carne ....... personas del archivo de horas que no estan en la
+                    Base de Datos del Personal. QUEDARON FUERA de la
+                    planilla: hay que agregarlas y volver a correrlo
+2 Diferencia de
+  salario ......... el salario no coincide entre los dos archivos.
+                    La Madre SIEMPRE usa el de su Base de Datos
+3 Dias sin
+  justificar ...... dias sin horas y sin color
+4 Jornada mixta y
+  nocturna ........ el diferencial que la Madre calcula pero NO paga,
+                    persona por persona
+5 Dias con horas
+  incompletas ..... dias de menos de 8 horas
+6 Reconciliacion .. compara el bruto del archivo de horas contra el
+                    que dara la Madre, con la causa de cada diferencia
+7 Enlaces rotos ... datos digitados en el archivo de horas que no
+                    quedaron enlazados y por eso NO se pagaron ahi
+8 En Madre sin
+  horas ........... gente de la planilla anterior que no vino ahora
+9 Notas ........... despidos, renuncias y cambios anotados en el
+                    archivo de horas
+10 Autocomproba-
+  cion ............ los totales que el archivo generado se verifica
+                    solo al abrirlo en Excel
+
+
+DE DONDE SACA CADA DATO
+-----------------------
+
+Del archivo de HORAS:
+  - horas de cada dia, extras, dobles y extras dobles
+  - el COLOR de cada dia se traduce asi:
+        rojo     -> Dias de ausencia
+        celeste  -> Incapacidad CCSS
+                    (si el dia tiene 4 horas = primeros 3 dias, la
+                     empresa paga la mitad; si esta vacio = mas de
+                     3 dias, lo asume la CCSS)
+        verde    -> Incapacidad INS
+        durazno  -> Permiso sin goce (PSG)
+  - cuando una persona aparece en DOS filas (por cambio de jornada)
+    el programa las une automaticamente en una sola
+  - la jornada se deduce de la formula de la columna ¢/HORA:
+        /30/8 = diurna    /30/7 = mixta    /30/6 = nocturna
+
+De la PLANILLA MADRE:
+  - hoja "Base de datos del Personal": carne, salario, fecha de
+    ingreso. El cruce se hace por CEDULA
+  - hoja "Errores": la tabla de cedulas mal digitadas se aplica sola.
+    Si aparece una cedula nueva mal digitada, agreguela ahi (columnas
+    Cedula / Correccion) y el programa la tomara la proxima vez
+
+
+SI ALGO FALLA
+-------------
+
+No aparece la Planilla Madre en la lista del PASO 2
+    Debe estar dentro de la carpeta "Plantillas" y terminar en .xlsx.
+    Cierre Excel: los archivos que empiezan con ~$ no cuentan.
+
+Dice "ya existe uno con ese nombre y se va a reemplazar"
+    Ya habia generado ese mismo pago antes. Si es a proposito,
+    siga. Si no, revise la fecha de pago del PASO 3.
+
+"Permission denied" al dar doble clic
+    Abra la Terminal, escriba  chmod +x   deje un espacio, arrastre
+    el archivo "Generar Planilla.command" a la ventana y presione ENTER.
+
+No se abrio el navegador
+    Abra usted el navegador y escriba:  127.0.0.1:8765
+    (la ventana negra le muestra la direccion exacta).
+
+El boton "Generar la planilla" se queda gris
+    Debajo del PASO 2 tiene que aparecer el recuadro azul con el
+    periodo detectado. Si en su lugar sale un mensaje rojo, ahi dice
+    que paso y trae un boton "Reintentar".
+    Si no aparece NADA, lo mas probable es que se cerro la ventana
+    negra: vuelva a dar doble clic y recargue la pantalla.
+
+Sale una franja naranja que dice "Esta pantalla quedo desactualizada"
+    Es normal si el programa se reinicio. Clic en "Recargar".
+
+Dice "El programa YA ESTABA ABIERTO"
+    Le dio doble clic dos veces. No pasa nada: use la pantalla que
+    ya tenia y cierre la ventana negra sobrante.
+
+Se cerro la pantalla del navegador por error
+    Vuelva a abrir esa misma direccion. Mientras la ventana negra
+    siga abierta, el programa sigue funcionando.
+
+Salen muchas personas en "1 Sin carne"
+    La Base de Datos del Personal esta desactualizada. Agregue a la
+    gente nueva en la hoja "Base de datos del Personal" de la Madre.
+
+LA HOJA "VERIFICACION"
+----------------------
+
+El archivo generado trae al final una hoja con pestana verde llamada
+"Verificacion". Abrala primero. Compara, renglon por renglon, lo que
+calculo el programa contra lo que acaba de calcular Excel:
+
+   trabajadores, horas ordinarias, salario bruto,
+   rebajo de CCSS, retencion de renta y salario neto
+
+Si la celda "RESULTADO GENERAL" dice TODO CUADRA, el archivo esta
+bien y puede seguir. Si dice REVISAR, ahi mismo se explica que hacer.
+
+Ya NO hay que presionar Cmd+Alt+F9 ni ninguna tecla: el archivo viene
+marcado para que Excel recalcule solo al abrirlo.
+
+
+SI ALGUNA CELDA SALE EN BLANCO O EN CERO
+    Cierre el archivo y vuelvalo a abrir: el recalculo ocurre al
+    abrirlo. Si abre el archivo con Vista Previa, Numbers o Google
+    Sheets en vez de Excel, los numeros pueden no aparecer: esos
+    programas no siempre recalculan formulas.
+
+
+La logica del programa esta en la carpeta 'programa'.
+No la mueva ni la renombre, y no borre 'programa/lib'.

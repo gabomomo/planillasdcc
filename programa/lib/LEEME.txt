@@ -1,0 +1,5 @@
+Estas dos carpetas son la libreria que lee y escribe archivos de Excel
+(openpyxl y et_xmlfile). Vienen incluidas para que el programa funcione
+en cualquier computadora sin tener que instalar nada.
+
+NO las borre ni las mueva.
